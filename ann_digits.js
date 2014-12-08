@@ -1,13 +1,13 @@
 var sink = require('./ann');
 var data = require('./data');
 var math = require('./lib/math');
-var _ = require('./lib/lodash')
+var _ = require('./lib/lodash');
 //ann.set(hej, 3, 1, 2);
 
 //var hej = sink.init(2,1,2,1);
 var hej = sink.init([64,64,10], [[sink.sigmoid, sink.sigmoidPrime]]);
 //console.log(ann.feedforward(hej, [1, 1]));
-
+//sink.conf.rate = 0.3;
 sink.conf.logging = 0;
 
 var trainingData;
@@ -36,7 +36,9 @@ data.readCsv('optdigits.tra', function (result) {
 		//console.log(trainingData[0]);
 		//console.log(testData[0]);
 
-		sink.train(hej, trainingData, 5);
+		console.log(trainingData.length);
+
+		sink.train(hej, trainingData, 1);
 
 		var numtest = testData.length;
 		var totguesses = 0;
@@ -55,7 +57,6 @@ data.readCsv('optdigits.tra', function (result) {
 
 
 
-sink.conf.rate = 0.3;
 //sink.conf.logging = 0;
 
 //while(hej.avgErr > 0.002) {

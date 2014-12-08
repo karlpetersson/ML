@@ -13,6 +13,25 @@
 		"logging": SINK_LOGLEVEL_FULL
 	};
 
+	function m_multiplyScalar (m1, scalar) {
+		
+		for (var i = 0, rows = m1.length; i < rows; i++) {
+			for(var j = 0, cols = m1[i].length; j < cols; j++) {
+				m1[i][j] = m1[i][j] * scalar;
+			}
+		}
+		return m1;
+	}
+
+	function m_subtract (m1, m2) {
+		for (var i = 0, rows = m1.length; i < rows; i++) {
+			for(var j = 0, cols = m1[i].length; j < cols; j++) {
+				m1[i][j] = m1[i][j] - m2[i][j];
+			}
+		}
+		return m1;
+	}
+
 	function vectorize (fn) {
 		return function (vec) {
 			if(!vec.map) {
@@ -83,7 +102,7 @@
 			ann.layers[l].m_delta_b = math.add(ann.layers[l].m_delta_b, delta_b);
 		}
 		
-		return math.squeeze(err);
+		return 0; //math.squeeze(err);
 	}
 
 	sink.Layer = function (numNeurons, numInputsPerNeuron, activationFn, activationFnPrime) {
@@ -168,14 +187,14 @@
 
 		for(var ep = 0; ep < numEpochs; ep++) {
 
-			var batches = [];
-			trainingData = _.shuffle(trainingData);
-			batches.push(trainingData.slice(0, 2));
-			batches.push(trainingData.slice(2));
+			//var batches = [];
+			//trainingData = _.shuffle(trainingData);
+			//batches.push(trainingData.slice(0, 2));
+			//batches.push(trainingData.slice(2));
 
-			var numBatches = batches.length;
-
-			for(var b = 0; b < numBatches; b++) {
+			//var numBatches = batches.length;
+			var trainlen = trainingData.length;
+			for(var b = 0; b < trainlen; b++) {
 
 				averageError = 0;
 
@@ -186,13 +205,60 @@
 					ann.layers[i].m_delta_b = math.zeros(ann.layers[i].m_biases.valueOf().length, 1);
 				}
 				
-				_.forEach(batches[b], function (e) {
+	
+				//_.forEach(trainingData[b], function (e) {
 					// backpropagation
-					var err = backProp(ann, e.x, e.y);
+					//var err = backProp(ann, e.x, e.y);
+				var now = Date.now();
+
+				var err = backProp(ann, trainingData[b].x, trainingData[b].y);
 					//averageError += math.pow(err,2);
-				});
+			//	});
+				var then = Date.now();
+				console.log("time spent: " + (then - now));
+
+
+				/*for(var j = 0; j < ann.layers.length; j++) {
+					ann.layers[j].m_delta_w = ann.layers[j].m_delta_w.valueOf();
+					ann.layers[j].m_delta_b = ann.layers[j].m_delta_b.valueOf();
+
+					ann.layers[j].m_weights = ann.layers[j].m_weights.valueOf();
+					ann.layers[j].m_biases = ann.layers[j].m_biases.valueOf();
+				}*/
+
+				//console.log(ann.layers[0].m_delta_w);
 
 					// update weight matrices
+				
+				//var now = Date.now();
+
+				var mat = [];
+
+
+				/*for(var j = 0; j < ann.layers.length; j++) {
+					var llen = ann.layers[j].m_delta_w.length;
+					for(var m = 0; m < llen; m++) {
+						var lllen = ann.layers[j].m_delta_w[j].length;
+						for(var n = 0; n < lllen; n++) {
+							ann.layers[j].m_weights[m][n] -= sink.conf.rate * ann.layers[j].m_delta_w[m][n];
+							ann.layers[j].m_biases[m][n] -= sink.conf.rate * ann.layers[j].m_delta_b[m][n];
+						}
+					}
+				}*/
+
+				//console.log(ann.layers[0].m_delta_w);
+
+
+
+				
+				/*for(var j = 0; j < ann.layers.length; j++) {
+					var m_delta_rw = m_multiplyScalar(ann.layers[j].m_delta_w, sink.conf.rate);
+					var m_delta_rb = m_multiplyScalar(ann.layers[j].m_delta_b, sink.conf.rate);
+
+					ann.layers[j].m_weights = m_subtract(ann.layers[j].m_weights, m_delta_rw);
+					ann.layers[j].m_biases = m_subtract(ann.layers[j].m_biases, m_delta_rb);
+				}*/
+
 				for(var j = 0; j < ann.layers.length; j++) {
 					var m_delta_rw = math.multiply(sink.conf.rate, ann.layers[j].m_delta_w);
 					var m_delta_rb = math.multiply(sink.conf.rate, ann.layers[j].m_delta_b);
@@ -200,9 +266,11 @@
 					ann.layers[j].m_weights = math.subtract(ann.layers[j].m_weights, m_delta_rw);
 					ann.layers[j].m_biases = math.subtract(ann.layers[j].m_biases, m_delta_rb);
 				}
-				console.log(batches[b].length);
-				ann.avgErr = averageError / batches[b].length;
-			}	
+
+
+				//console.log(trainingData[b].length);
+				//ann.avgErr = averageError / trainingData[b].length;
+			}
 
 			if(sink.conf.logging === SINK_LOGLEVEL_FULL) {
 				console.log('\033[2J');
