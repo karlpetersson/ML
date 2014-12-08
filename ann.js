@@ -60,6 +60,7 @@
 
 		// calculate output error
 		// (a - y) * theta'(a(L))
+
 		var delta = hadamard(costDerivative(_.last(activations), y), _.last(ann.layers).activationFnPrime(_.last(zs)));
 		var err = costDerivative(_.last(activations),y);
 
@@ -188,7 +189,7 @@
 				_.forEach(batches[b], function (e) {
 					// backpropagation
 					var err = backProp(ann, e.x, e.y);
-					averageError += math.pow(err,2);
+					//averageError += math.pow(err,2);
 				});
 
 					// update weight matrices
@@ -230,7 +231,7 @@
 			console.log("Output -> " + math.format(outp, 14) + "\n");
 		}
 
-		return inputs;
+		return outp;
 	};
 
 	sink.testSuite = {};
