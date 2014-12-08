@@ -49,18 +49,18 @@
 		var activations = [lastActivation];
 		var zs = [];
 		var numLayers = ann.layers.length;
-		var gradient = [];
 
 		ann.layers.forEach(function (layer) {
 			var z = math.add(math.multiply(layer.m_weights, lastActivation), layer.m_biases);
 			if(z._size.length < 2) { z = math.matrix([z]); }
 			zs.push(z);
-			lastActivation = ann.activationFn(z);
+			lastActivation = layer.activationFn(z);
 			activations.push(lastActivation);
 		});
 
 		// calculate output error
-		var delta = hadamard(costDerivative(_.last(activations), y), ann.activationFnPrime(_.last(zs)));
+		// (a - y) * theta'(a(L))
+		var delta = hadamard(costDerivative(_.last(activations), y), _.last(ann.layers).activationFnPrime(_.last(zs)));
 		var err = costDerivative(_.last(activations),y);
 
 		var delta_b_output = delta;
@@ -73,7 +73,7 @@
 		for(var l = numLayers - 2; l >= 0; l--) {
 			var oldDelta = delta;
 			delta = hadamard(math.multiply(math.transpose(ann.layers[l+1].m_weights), oldDelta),
-				ann.activationFnPrime(zs[l]));
+				ann.layers[l].activationFnPrime(zs[l]));
 
 			var delta_w = math.multiply(delta, math.transpose(activations[l - 1 + 1]));
 			var delta_b = delta;
@@ -85,19 +85,42 @@
 		return math.squeeze(err);
 	}
 
-	sink.Layer = function (numNeurons, numInputsPerNeuron) {
+	sink.Layer = function (numNeurons, numInputsPerNeuron, activationFn, activationFnPrime) {
 		this.m_weights = math.matrix(math.random([numNeurons, numInputsPerNeuron], -1, 1));
 		this.m_biases = math.matrix(math.random([numNeurons], -1, 1));
+		this.activationFn = activationFn;
+		this.activationFnPrime = activationFnPrime;
 	};
 
-	sink.Ann = function (sizes, activationFn, activationFnPrime) {
-		var inputsPerNeuron = _.first(sizes);
-		this.activationFn = vectorize(!activationFnPrime ? sink.sigmoid : activationFn);
-		this.activationFnPrime = vectorize(!activationFnPrime ? sink.sigmoidPrime : activationFnPrime);
+	sink.Ann = function (sizes, activationFns) {
+
+		if(activationFns && !_.isArray(activationFns)) {
+			console.error("Init: needs an array of activation function tuples [fn, fnPrime]");
+			return undefined;
+		} else if(!activationFns) {
+			activationFns = [[sink.sigmoid, sink.sigmoidPrime]];
+		}
+ 
+		if(activationFns.length === 1) {
+			sizes = _.map(sizes, function (s) {
+				return [s, activationFns[0]];
+			});
+		} else if(activationFns.length !== (sizes.length - 1)) {
+			console.error("Init: needs one tuple [fn, fnPrime] for each layer exept input layer (num layers - 1), or just one tuple for all layers");
+			return undefined;
+		} else {
+			sizes = [sizes[0]].concat(_.zip(_.rest(sizes), activationFns));
+		}
+
+		var inputsPerNeuron = _.first(_.first(sizes));
+
 		this.avgErr = 1;
-		this.layers = _.map(_.rest(sizes), function (numNeurons) {
-			var layer = new sink.Layer(numNeurons, inputsPerNeuron);
-			inputsPerNeuron = numNeurons;
+		this.layers = _.map(_.rest(sizes), function (sizeFnTuple) {
+			var numNeurons = sizeFnTuple[0];
+			var aFn = vectorize(sizeFnTuple[1][0]);
+			var aFnPrime = vectorize(sizeFnTuple[1][1]);
+			var layer = new sink.Layer(numNeurons, inputsPerNeuron, aFn, aFnPrime);
+			inputsPerNeuron = numNeurons; // num inputs for next layer
 			return layer;
 		});
 	};
@@ -119,54 +142,74 @@
 		return sink.sigmoid(z)*(1-sink.sigmoid(z));
 	};
 
-	sink.train = function (ann, batch) {
-		var averageError = 0;
-		
-		// initialize delta weight variables
-		for(var i = 0; i < ann.layers.length; i++) {
-			ann.layers[i].m_delta_w = math.zeros(ann.layers[i].m_weights.valueOf().length,
-				ann.layers[i].m_weights.valueOf()[0].length);
-			ann.layers[i].m_delta_b = math.zeros(ann.layers[i].m_biases.valueOf().length, 1);
-		}
-		
-		_.forEach(batch, function (e) {
-			// backpropagation
-			var err = backProp(ann, e.x, e.y);
-			averageError += math.pow(err,2);
-		});
+	/*sink.tanh = function (z) {
+		return 2/(1+math.exp((-2) * z)) - 1;
+	};*/
 
-			// update weight matrices
-		for(var j = 0; j < ann.layers.length; j++) {
-			var m_delta_rw = math.multiply(sink.conf.rate, ann.layers[j].m_delta_w);
-			var m_delta_rb = math.multiply(sink.conf.rate, ann.layers[j].m_delta_b);
+	sink.tanh = function (z) {
+		return (math.exp(z) - math.exp(-z)) / (math.exp(z) + math.exp(-z));
+	};
 
-			var momentumW = math.multiply(ann.layers[j].m_weights, sink.conf.momentum * sink.conf.rate);
-			//var momentumB = math.multiply(ann.layers[j].m_biases, sink.conf.momentum * sink.conf.rate);
+	sink.tanhPrime = function (z) {
+		return 1-(sink.tanh(z)*sink.tanh(z));
+	};
 
-			ann.layers[j].m_weights = math.subtract(ann.layers[j].m_weights, m_delta_rw);
-			ann.layers[j].m_biases = math.subtract(ann.layers[j].m_biases, m_delta_rb);
+	sink.gaussian = function (z) {
+		return math.exp((-1)*z * z);
+	};
 
-			//ann.layers[j].m_weights = math.subtract(ann.layers[j].m_weights, momentumW);
-			//ann.layers[j].m_biases = math.subtract(ann.layers[j].m_biases, momentumB);
+	sink.gaussianPrime = function (z) {
+		return (-2)*z*sink.gaussian(z);
+	};
 
+	sink.train = function (ann, trainingData, numEpochs) {
+		var averageError;
 
-			/*
-			if(ann.layers[j].prevWupdate) {
-				ann.layers[j].m_weights = math.subtract(ann.layers[j].m_weights,
-					math.multiply(ann.layers[j].prevWupdate, sink.conf.momentum));
-				ann.layers[j].m_biases = math.subtract(ann.layers[j].m_biases,
-					math.multiply(ann.layers[j].prevBupdate, sink.conf.momentum));
+		for(var ep = 0; ep < numEpochs; ep++) {
+
+			var batches = [];
+			trainingData = _.shuffle(trainingData);
+			batches.push(trainingData.slice(0, 2));
+			batches.push(trainingData.slice(2));
+
+			var numBatches = batches.length;
+
+			for(var b = 0; b < numBatches; b++) {
+
+				averageError = 0;
+
+				// initialize delta weight variables
+				for(var i = 0; i < ann.layers.length; i++) {
+					ann.layers[i].m_delta_w = math.zeros(ann.layers[i].m_weights.valueOf().length,
+						ann.layers[i].m_weights.valueOf()[0].length);
+					ann.layers[i].m_delta_b = math.zeros(ann.layers[i].m_biases.valueOf().length, 1);
+				}
+				
+				_.forEach(batches[b], function (e) {
+					// backpropagation
+					var err = backProp(ann, e.x, e.y);
+					averageError += math.pow(err,2);
+				});
+
+					// update weight matrices
+				for(var j = 0; j < ann.layers.length; j++) {
+					var m_delta_rw = math.multiply(sink.conf.rate, ann.layers[j].m_delta_w);
+					var m_delta_rb = math.multiply(sink.conf.rate, ann.layers[j].m_delta_b);
+
+					ann.layers[j].m_weights = math.subtract(ann.layers[j].m_weights, m_delta_rw);
+					ann.layers[j].m_biases = math.subtract(ann.layers[j].m_biases, m_delta_rb);
+				}
+				console.log(batches[b].length);
+				ann.avgErr = averageError / batches[b].length;
+			}	
+
+			if(sink.conf.logging === SINK_LOGLEVEL_FULL) {
+				console.log('\033[2J');
+				console.log('Epoch ' + (ep+1) + ' completed');
+				console.log('Average error: ' + ann.avgErr);
 			}
-
-			ann.layers[j].prevWupdate = m_delta_rw;
-			ann.layers[j].prevBupdate = m_delta_rb;*/
 		}
 
-		if(sink.conf.logging === SINK_LOGLEVEL_FULL) {
-			ann.avgErr = averageError / batch.length;
-			console.log('\033[2J');
-			console.log('Average error: ' + ann.avgErr);
-		}
 		return 1;
 	};
 
@@ -176,7 +219,7 @@
 
 		for (var i = 0; i < ann.layers.length; i++) {
 			var oldInputs = inputs;
-			inputs = ann.activationFn(math.add(math.multiply(ann.layers[i].m_weights, oldInputs),
+			inputs = ann.layers[i].activationFn(math.add(math.multiply(ann.layers[i].m_weights, oldInputs),
 				ann.layers[i].m_biases));
 		}
 
