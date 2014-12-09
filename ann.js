@@ -48,7 +48,8 @@
 
 		// calculate output error
 		// (a - y) * theta'(a(L))
-		var delta = $m.multMatrixElementwiseMutate(costDerivative(activations[activations.length-1], y), ann.layers[ann.layers.length-1].activationFnPrime(zs[zs.length-1]));
+		var delta = $m.multMatrixElementwiseMutate(costDerivative(activations[activations.length-1], y), 
+			ann.layers[ann.layers.length-1].activationFnPrime(zs[zs.length-1]));
 		//var err = costDerivative(_.last(activations),y);
 
 		var delta_b_output = delta;

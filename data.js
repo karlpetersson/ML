@@ -1,6 +1,5 @@
 (function () {
 
-	var math = require('./lib/math');
 	var _ = require('./lib/lodash');
 	var fs = require('fs');
 	var csv = require('fast-csv');
