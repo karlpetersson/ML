@@ -1,7 +1,5 @@
 var math = require('./math');
 
-// COLOR,SIZE,DIP/STRETCH,AGE,INFLATED/DEFLATED
-
 var svm = {};
 
 var Svm = function (c, sigma) {

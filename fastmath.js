@@ -147,6 +147,17 @@
 		return res;
 	}
 
+	m.vectorize = function (fn) {
+		return function (vec) {
+			var len = vec.length;
+			var res = [];
+			for(var r = 0; r < len; r++) {
+				res[r] = [fn(vec[r][0])];
+			}
+			return res;
+		}
+	}
+
 	m.multMatrixElementwiseMutate = function (m1, m2) {
 		var rows = m1.length,
 			cols = m1[0].length;
@@ -195,17 +206,6 @@
 			}
 		}
 		return m1;
-	}
-
-	m.vectorize = function (fn) {
-		return function (vec) {
-			var len = vec.length;
-			var res = [];
-			for(var r = 0; r < len; r++) {
-				res[r] = [fn(vec[r][0])];
-			}
-			return res;
-		}
 	}
 
 	module.exports = m;
