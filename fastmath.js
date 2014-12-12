@@ -15,8 +15,7 @@
 		}
 
 		return res;
-
-	}
+	};
 
 	m.transpose = function (m) {
 		var res = [],
@@ -30,9 +29,9 @@
 			}
 		}
 		return res;
-	}
+	};
 
-	m.multMatrixScalar = function (m1, scalar) {	
+	m.multMatrixScalar = function (m1, scalar) {
 		var res = [],
 			rows = m1.length,
 			cols = m1[0].length;
@@ -44,7 +43,7 @@
 			}
 		}
 		return res;
-	}
+	};
 
 	m.subtractMatrixMatrix = function (m1, m2) {
 		var res = [],
@@ -58,7 +57,7 @@
 			}
 		}
 		return res;
-	}
+	};
 
 	m.addMatrixMatrix = function (m1, m2) {
 		var res = [],
@@ -72,7 +71,7 @@
 			}
 		}
 		return res;
-	}
+	};
 
 	m.multMatrixMatrix = function (m1, m2) {
 		var res = [],
@@ -92,7 +91,7 @@
 			}
 		}
 		return res;
-	}
+	};
 
 	m.multVectorMatrix = function (v, m) {
 		var res = [],
@@ -108,12 +107,12 @@
 			res[c] = result;
 		}
 		return res;
-	}
+	};
 
 	m.multMatrixVector = function (m, v) {
 		var res = [],
 			rows = m.length,
-			cols = m[0].length
+			cols = m[0].length;
 
 		for (var r = 0; r < rows; r++) {
 			var result = 0;
@@ -123,7 +122,7 @@
 			res[r] = result;
 		}
 		return res;
-	}
+	};
 
 	m.zeros = function(rows, cols) {
 		var res = [];
@@ -134,7 +133,7 @@
 			}
 		}
 		return res;
-	}
+	};
 
 	m.random = function(rows, cols) {
 		var res = [];
@@ -145,7 +144,7 @@
 			}
 		}
 		return res;
-	}
+	};
 
 	m.vectorize = function (fn) {
 		return function (vec) {
@@ -155,8 +154,8 @@
 				res[r] = [fn(vec[r][0])];
 			}
 			return res;
-		}
-	}
+		};
+	};
 
 	m.multMatrixElementwiseMutate = function (m1, m2) {
 		var rows = m1.length,
@@ -169,10 +168,9 @@
 		}
 
 		return m1;
+	};
 
-	}
-
-	m.multMatrixScalarMutate = function (m1, scalar) {	
+	m.multMatrixScalarMutate = function (m1, scalar) {
 		var rows = m1.length,
 			cols = m1[0].length;
 
@@ -182,7 +180,7 @@
 			}
 		}
 		return m1;
-	}
+	};
 
 	m.subtractMatrixMatrixMutate = function (m1, m2) {
 		var rows = m1.length,
@@ -194,19 +192,44 @@
 			}
 		}
 		return m1;
-	}
+	};
 
 	m.addMatrixMatrixMutate = function (m1, m2) {
 		var rows = m1.length,
 			cols = m1[0].length;
 
-		for (var r = 0; r < rows; r++) {
+		for(var r = 0; r < rows; r++) {
 			for(var c = 0; c < cols; c++) {
 				m1[r][c] += m2[r][c];
 			}
 		}
 		return m1;
-	}
+	};
+
+	m.sum = function (vec) {
+		var sum = 0,
+			len = vec.length;
+		for(var i = 0; i < len; i++) {
+			sum += vec[i];
+		}
+		return sum;
+	};
+
+	m.mean = function (vec) {
+		return m.sum(vec)/vec.length;
+	};
+
+	m.std = function (vec) {
+		var average = m.mean(vec),
+			len = vec.length,
+			squared = 0;
+
+		for(var i = 0; i < len; i++) {
+			squared += Math.pow(vec[i] - average, 2);
+		}
+
+		return Math.sqrt(squared/len);
+	};
 
 	module.exports = m;
 

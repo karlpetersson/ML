@@ -1,65 +1,21 @@
 (function () {
 
 	var _ = require('./lib/lodash');
-	var sink = {};
-	var $m = require('./fastmath')
+	var $m = require('./fastmath');
 
-	var SINK_LOGLEVEL_NONE = 0;
-	var SINK_LOGLEVEL_FULL = 1;
+	var _ann = {};
 
-	sink.conf = {
+	var MIN_NUM_LAYERS = 3;
+
+	_ann.conf = {
 		"rate": 0.1,
-		"logging": SINK_LOGLEVEL_FULL
 	};
 
-	function vectorize (fn) {
-		return function (vec) {
-			var len = vec.length;
-			var res = [];
-			for(var r = 0; r < len; r++) {
-				res[r] = [fn(vec[r][0])];
-			}
-			return res;
-		}
-	}
-
-	function costDerivative (activations, y) {
-		return $m.subtractMatrixMatrix(activations, y);
-	}
-
-	sink.sigmoid = function (z) {
-		p = 1.0;
-		return 1/(1+Math.exp((-z)/p));
-	};
-
-	sink.sigmoidPrime = function (z) {
-		return sink.sigmoid(z)*(1-sink.sigmoid(z));
-	};
-
-	sink.tanh = function (z) {
-		return (Math.exp(z) - Math.exp(-z)) / (Math.exp(z) + Math.exp(-z));
-	};
-
-	sink.tanhPrime = function (z) {
-		return 1-(sink.tanh(z)*sink.tanh(z));
-	};
-
-	sink.gaussian = function (z) {
-		return Math.exp((-1)*z * z);
-	};
-
-	sink.gaussianPrime = function (z) {
-		return (-2)*z*sink.gaussian(z);
-	};
-
-	sink.Ann = function (sizes, activationFns) {
-		this.avgErr = 1;
-
+	function Ann (sizes, activationFns) {
 		if(activationFns && !_.isArray(activationFns)) {
-			console.error("Init: needs an array of activation function tuples [fn, fnPrime]");
-			return undefined;
+			throw new Error("Init: needs an array of activation function tuples [fn, fnPrime]");
 		} else if(!activationFns) {
-			activationFns = [[sink.sigmoid, sink.sigmoidPrime]];
+			activationFns = [[sigmoid, sigmoidPrime]];
 		}
  
 		if(activationFns.length === 1) {
@@ -67,8 +23,7 @@
 				return [s, activationFns[0]];
 			});
 		} else if(activationFns.length !== (sizes.length - 1)) {
-			console.error("Init: needs one tuple [fn, fnPrime] for each layer exept input layer (num layers - 1), or just one tuple for all layers");
-			return undefined;
+			throw new Error("Init: needs one tuple [fn, fnPrime] for each layer exept input layer (num layers - 1), or just one tuple for all layers");
 		} else {
 			sizes = [sizes[0]].concat(_.zip(_.rest(sizes), activationFns));
 		}
@@ -80,15 +35,15 @@
 			var numNeurons = sizeFnTuple[0];
 			var aFn = vectorize(sizeFnTuple[1][0]);
 			var aFnPrime = vectorize(sizeFnTuple[1][1]);
-			var layer = new sink.Layer(numNeurons, inputsPerNeuron, aFn, aFnPrime);
+			var layer = new Layer(numNeurons, inputsPerNeuron, aFn, aFnPrime);
 
 			inputsPerNeuron = numNeurons; // num inputs for next layer
 
 			return layer;
 		});
-	};
+	}
 
-	sink.Layer = function (numNeurons, numInputsPerNeuron, activationFn, activationFnPrime) {
+	function Layer (numNeurons, numInputsPerNeuron, activationFn, activationFnPrime) {
 		// initialize weights 
 		this.m_weights = $m.random(numNeurons, numInputsPerNeuron);
 		this.m_biases = $m.random(numNeurons, 1);
@@ -98,21 +53,41 @@
 
 		this.activationFn = activationFn;
 		this.activationFnPrime = activationFnPrime;
-	};
+	}
 
-	sink.init = function (sizes, activationFn) {
-		if(sizes.length < 3) {
-			console.error("The network at least one input, one hidden and one output layer");
-			return undefined;
+	/**
+	 * Vectorize a function so that when it can be called with a vector of values,
+	 * applying itself to each value
+	 *
+	 * @param {Function} fn Function to vectorize
+	 * @returns {Function} Returns vectorized function
+	 */
+	function vectorize (fn) {
+		return function (vec) {
+			var len = vec.length;
+			var res = [];
+			for(var r = 0; r < len; r++) {
+				res[r] = [fn(vec[r][0])];
+			}
+			return res;
+		};
+	}
+
+	/**
+	 * Initializes an Ann with randomized weights (normally distributed N~(0,1))
+	 *
+	 * @param {Array} sizes Array of integers, each value representing a layer and the number of nodes in that layer
+	 * @returns {Ann} Returns a new Ann
+	 */
+	function init (sizes, activationFn) {
+		if(sizes.length < MIN_NUM_LAYERS) {
+			throw new Error("The network at least one input, one hidden and one output layer");
 		}
-		return new sink.Ann(sizes, activationFn);
-	};	
+		return new Ann(sizes, activationFn);
+	}
 
-	sink.train = function (ann, trainingData) {
-		var now = Date.now();
+	function train (ann, trainingData) {
 
-		trainingData = _.shuffle(trainingData);
-		
 		for(var b = 0, trainlen = trainingData.length; b < trainlen; b++) {
 			var x = trainingData[b].x,
 				y = trainingData[b].y,
@@ -123,10 +98,10 @@
 				outputs = $m.transpose([y]);
 
 			// feedforward pass
-			var finalActivation = sink.predict(ann, x);
+			var finalActivation = predict(ann, x);
 
 			// calculate output error -> (a - y) * theta'(a(L))
-			var delta = $m.multMatrixElementwiseMutate(costDerivative(finalActivation, outputs), 
+			var delta = $m.multMatrixElementwiseMutate(costDerivative(finalActivation, outputs),
 					ann.layers[numLayers-1].partials);
 
 			deltaW[numLayers-1] = $m.multMatrixMatrix(delta, $m.transpose(ann.layers[numLayers-2].activations));
@@ -145,14 +120,14 @@
 				
 			// update weights by gradient descent
 			for(var j = 0; j < ann.layers.length; j++) {
-				ann.layers[j].m_weights = $m.subtractMatrixMatrixMutate(ann.layers[j].m_weights, 
-					$m.multMatrixScalarMutate(deltaW[j], sink.conf.rate));
-				ann.layers[j].m_biases = $m.subtractMatrixMatrixMutate(ann.layers[j].m_biases, 
-					$m.multMatrixScalarMutate(deltaB[j], sink.conf.rate));
+				ann.layers[j].m_weights = $m.subtractMatrixMatrixMutate(ann.layers[j].m_weights,
+					$m.multMatrixScalarMutate(deltaW[j], _ann.conf.rate));
+				ann.layers[j].m_biases = $m.subtractMatrixMatrixMutate(ann.layers[j].m_biases,
+					$m.multMatrixScalarMutate(deltaB[j], _ann.conf.rate));
 			}
 		}
 
-		// square error of predictions
+		// TODO: square error of predictions
 		/*var squareError = [];
 		for(var i = 0; i < trainingData.length; i++) {
 			squareError[i] = costDerivative(ann.layers[ann.layers.length-1].activations, trainingData[i].y);
@@ -161,18 +136,10 @@
 			}
 		}*/
 
-		var then = Date.now();
-
-		if(sink.conf.logging === SINK_LOGLEVEL_FULL) {
-			console.log('Epoch completed');
-			console.log("time spent: " + (then - now));
-			//console.log('Average error: ' + ann.avgErr);
-		}
-
 		return 1;
-	};
+	}
 
-	sink.predict = function (ann, inputs) {
+	function predict (ann, inputs) {
 		inputs = $m.transpose([inputs]);
 
 		for (var i = 0; i < ann.layers.length; i++) {
@@ -186,13 +153,53 @@
 		}
 
 		return inputs;
-	};
+	}
 
-	sink.testSuite = {};
-	sink.testSuite.vectorize = vectorize;
-	sink.testSuite.costDerivative = costDerivative;
+	function costDerivative (activations, y) {
+		return $m.subtractMatrixMatrix(activations, y);
+	}
 
-	module.exports = sink;
+	function sigmoid (z) {
+		p = 1.0;
+		return 1/(1+Math.exp((-z)/p));
+	}
+
+	function sigmoidPrime (z) {
+		return sigmoid(z)*(1-sigmoid(z));
+	}
+
+	function tanh (z) {
+		return (Math.exp(z) - Math.exp(-z)) / (Math.exp(z) + Math.exp(-z));
+	}
+
+	function tanhPrime (z) {
+		return 1-(tanh(z)*tanh(z));
+	}
+
+	function gaussian (z) {
+		return Math.exp((-1)*z * z);
+	}
+
+	function gaussianPrime (z) {
+		return (-2)*z*gaussian(z);
+	}
+
+	function shuffle (data) {
+		return _.shuffle(data);
+	}
+
+	_ann.init = init;
+	_ann.train = train;
+	_ann.predict = predict;
+	_ann.sigmoid = sigmoid;
+	_ann.sigmoidPrime = sigmoidPrime;
+	_ann.gaussian = gaussian;
+	_ann.gaussianPrime = gaussianPrime;
+	_ann.tanh = tanh;
+	_ann.tanhPrime = tanhPrime;
+	_ann.shuffle = shuffle;
+
+	module.exports = _ann;
 
 }.call(this));
 

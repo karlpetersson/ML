@@ -1,5 +1,4 @@
 var m = require('./fastmath');
-var math = require('./lib/math')
 
 var mat = [[1,2,3], [1,2,3]];
 var mat2 = [[2,2], [2,2], [2,2]];
@@ -54,3 +53,11 @@ console.log("vectorize mat3(T) (a + 1)");
 var vectorized = m.vectorize(ok);
 console.log(vectorized(m.transpose(vec1)));
 console.log("--------");
+console.log("sum of [2,2,2]");
+console.log(m.sum([2,2,2]));
+console.log("--------");
+console.log("mean of [1,2,3,4]");
+console.log(m.mean([1,2,3,4]));
+console.log("--------");
+console.log("variance of [1,2,3,4]");
+console.log(m.std([1,1,1]));
