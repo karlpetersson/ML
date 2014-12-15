@@ -44,7 +44,6 @@
 	}
 
 	function Layer (numNeurons, numInputsPerNeuron, activationFn, activationFnPrime) {
-		// initialize weights 
 		this.m_weights = $m.random(numNeurons, numInputsPerNeuron);
 		this.m_biases = $m.random(numNeurons, 1);
 		
@@ -74,10 +73,12 @@
 	}
 
 	/**
-	 * Initializes an Ann with randomized weights (normally distributed N~(0,1))
+	 * Initializes an Ann with randomized weights (normally distributed from N~(0,1))
 	 *
-	 * @param {Array} sizes Array of integers, each value representing a layer and the number of nodes in that layer
-	 * @returns {Ann} Returns a new Ann
+	 * @param {Array}	sizes Array of integers, each value representing a layer and the number of nodes in that layer
+	 * @param {Array}	activationFn Array of Function tuples, one tuple for each layer in 'sizes'. Each tuple contains 
+	 * 					an activation funtion and the derivative of that function.
+	 * @returns {Ann}	Returns a new Ann
 	 */
 	function init (sizes, activationFn) {
 		if(sizes.length < MIN_NUM_LAYERS) {
@@ -86,6 +87,15 @@
 		return new Ann(sizes, activationFn);
 	}
 
+	/**
+	 * Trains an Ann with specified data by performing back propagation and adjusting weights using
+	 * stochastic gradient descent.
+	 *
+	 * @param {Ann} ann Ann to train
+	 * @param {Array} trainingData array of objects with x and y properties, representing a training example 'x'
+	 * with output 'y' for that example.
+	 * @returns {number} returns 1 if training succeeds
+	 */
 	function train (ann, trainingData) {
 
 		for(var b = 0, trainlen = trainingData.length; b < trainlen; b++) {
@@ -139,6 +149,13 @@
 		return 1;
 	}
 
+	/**
+	 * Performs feedforward of an Ann. Takes input and calculates the output of the network for that input.
+	 *
+	 * @param {Ann} ann Ann to calcute output from
+	 * @param {Array} vector of input values
+	 * @returns {Array} Returns the network output
+	 */
 	function predict (ann, inputs) {
 		inputs = $m.transpose([inputs]);
 
@@ -155,10 +172,20 @@
 		return inputs;
 	}
 
+	/**
+	 * Vectorized quadratic cost function derivative
+	 */
 	function costDerivative (activations, y) {
 		return $m.subtractMatrixMatrix(activations, y);
 	}
 
+	function shuffle (data) {
+		return _.shuffle(data);
+	}
+
+	/**
+	 * Predefined activation functions and their derivatives
+	 */
 	function sigmoid (z) {
 		p = 1.0;
 		return 1/(1+Math.exp((-z)/p));
@@ -182,10 +209,6 @@
 
 	function gaussianPrime (z) {
 		return (-2)*z*gaussian(z);
-	}
-
-	function shuffle (data) {
-		return _.shuffle(data);
 	}
 
 	_ann.init = init;
