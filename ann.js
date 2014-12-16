@@ -1,7 +1,7 @@
 (function () {
 
 	var _ = require('./lib/lodash');
-	var $m = require('./fastmath');
+	var $m = require('./math');
 
 	var _ann = {};
 
@@ -48,7 +48,7 @@
 		this.m_biases = $m.random(numNeurons, 1);
 		
 		this.activations = [];
-		this.partials = [];
+		this.aPrimes = [];
 
 		this.activationFn = activationFn;
 		this.activationFnPrime = activationFnPrime;
@@ -88,8 +88,8 @@
 	}
 
 	/**
-	 * Trains an Ann with specified data by performing back propagation and adjusting weights using
-	 * stochastic gradient descent.
+	 * Trains an Ann with specified data by calculating output error, performing back propagation of error
+	 * and adjusting weights using stochastic gradient descent.
 	 *
 	 * @param {Ann} ann Ann to train
 	 * @param {Array} trainingData array of objects with x and y properties, representing a training example 'x'
@@ -112,7 +112,7 @@
 
 			// calculate output error -> (a - y) * theta'(a(L))
 			var delta = $m.multMatrixElementwiseMutate(costDerivative(finalActivation, outputs),
-					ann.layers[numLayers-1].partials);
+					ann.layers[numLayers-1].aPrimes);
 
 			deltaW[numLayers-1] = $m.multMatrixMatrix(delta, $m.transpose(ann.layers[numLayers-2].activations));
 			deltaB[numLayers-1] = delta;
@@ -122,7 +122,7 @@
 				var _activation = l > 0 ? ann.layers[l - 1].activations : inputs;
 				
 				delta = $m.multMatrixElementwiseMutate($m.multMatrixMatrix($m.transpose(ann.layers[l+1].m_weights), delta),
-					ann.layers[l].partials);
+					ann.layers[l].aPrimes);
 
 				deltaW[l] = $m.multMatrixMatrix(delta, $m.transpose(_activation));
 				deltaB[l] = delta;
@@ -150,7 +150,8 @@
 	}
 
 	/**
-	 * Performs feedforward of an Ann. Takes input and calculates the output of the network for that input.
+	 * Performs feedforward of an Ann. Takes input and calculates the output of the network.
+	 * Also updates the 
 	 *
 	 * @param {Ann} ann Ann to calcute output from
 	 * @param {Array} vector of input values
@@ -160,10 +161,12 @@
 		inputs = $m.transpose([inputs]);
 
 		for (var i = 0; i < ann.layers.length; i++) {
-			var z = $m.addMatrixMatrixMutate($m.multMatrixMatrix(ann.layers[i].m_weights, inputs), ann.layers[i].m_biases),
-				activation = ann.layers[i].activationFn(z);
+			// calculate weighed input of neurons to this layer
+			var z = $m.addMatrixMatrixMutate($m.multMatrixMatrix(ann.layers[i].m_weights, inputs), ann.layers[i].m_biases);
 
-			ann.layers[i].partials = ann.layers[i].activationFnPrime(z);
+			var activation = ann.layers[i].activationFn(z);
+			
+			ann.layers[i].aPrimes = ann.layers[i].activationFnPrime(z); // measures how fast the activation function is changing in this layer
 			ann.layers[i].activations = activation;
 
 			inputs = activation;
@@ -177,10 +180,6 @@
 	 */
 	function costDerivative (activations, y) {
 		return $m.subtractMatrixMatrix(activations, y);
-	}
-
-	function shuffle (data) {
-		return _.shuffle(data);
 	}
 
 	/**
@@ -209,6 +208,10 @@
 
 	function gaussianPrime (z) {
 		return (-2)*z*gaussian(z);
+	}
+
+	function shuffle (data) {
+		return _.shuffle(data);
 	}
 
 	_ann.init = init;

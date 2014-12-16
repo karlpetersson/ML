@@ -28,7 +28,7 @@ data.readCsv('optdigits.tra', function (result) {
 			return {x: xvalues, y: _.last(line)};
 		});	
 
-		for(var i = 0; i < 100; i++) {
+		for(var i = 0; i < 10; i++) {
 			var now = Date.now();
 			sink.train(hej, trainingData);
 			var then = Date.now();

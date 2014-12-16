@@ -1,10 +1,7 @@
-var sink = require('../ann');
+var ann = require('../ann');
 var data = require('../data');
-//ann.set(hej, 3, 1, 2);
 
-//var hej = sink.init(2,1,2,1);
-var hej = sink.init([2,2,1], [[sink.tanh, sink.tanhPrime]]);
-//console.log(ann.feedforward(hej, [1, 1]));
+var testann = ann.init([2,2,1], [[ann.tanh, ann.tanhPrime]]);
 
 var trainingData = [
 	{x: [1, 0], y:[1] },
@@ -13,18 +10,17 @@ var trainingData = [
 	{x: [0, 0], y:[0] }
 ];
 
-sink.conf.rate = 0.3;
-//sink.conf.logging = 0;
+var testData = [
+	[1,0],[0,1],[1,1],[0,0]
+];
 
-//while(hej.avgErr > 0.002) {
-sink.train(hej, trainingData, 500);
-//
+ann.conf.rate = 0.3;
 
-sink.classify(hej, [1,0]);
-sink.classify(hej, [0,1]);
-sink.classify(hej, [1,1]);
-sink.classify(hej, [0,0]);
+for(var i = 0; i < 500; i++) {
+	ann.train(testann, trainingData);
+}
 
-
-//console.log(hej.layers[0].weightMatrix);
-//console.log(hej.layers[1].weightMatrix);
+for(var j = 0, len = testData.length; j < len; j++) {
+	console.log("input -> " + testData[j]);
+	console.log("output -> " + ann.predict(testann, testData[j]) + "\n");
+}

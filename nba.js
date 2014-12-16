@@ -1,6 +1,6 @@
 (function () {
 	var _ = require('./lib/lodash');
-	var $m = require('./fastmath');
+	var $m = require('./math');
 	var $errors = require('./lib/errors');
 
 	var _nba = {};
