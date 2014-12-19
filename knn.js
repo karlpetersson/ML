@@ -3,7 +3,7 @@
     var _ = require('./lib/lodash');
     var $m = require('./math');
 
-    var _knn = {};
+    var kNearestNeighbours = {};
 
     function Node(value, label, leftChild, rightChild) {
         this.value = value;
@@ -112,11 +112,11 @@
         return best;
     }
 
-    _knn.kdTree = kdTree;
-    _knn.init = init;
-    _knn.classify = classify;
+    kNearestNeighbours.kdTree = kdTree;
+    kNearestNeighbours.init = init;
+    kNearestNeighbours.classify = classify;
 
-    module.exports = _knn;
+    module.exports = kNearestNeighbours;
 
 }.call(this));
 

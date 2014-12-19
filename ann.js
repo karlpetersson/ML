@@ -8,7 +8,7 @@
         TOO_FEW_LAYERS: 'The network at least one input, one hidden and one output layer'
     };
 
-    var _ann = {
+    var feedForwardAnn = {
         conf: {
             'rate': 0.1
         }
@@ -122,9 +122,9 @@
             // update weights by gradient descent
             for(var j = 0; j < ann.layers.length; j++) {
                 ann.layers[j].m_weights = $m.subtractMatrixMatrixMutate(ann.layers[j].m_weights,
-                    $m.multMatrixScalarMutate(deltaW[j], _ann.conf.rate));
+                    $m.multMatrixScalarMutate(deltaW[j], feedForwardAnn.conf.rate));
                 ann.layers[j].m_biases = $m.subtractMatrixMatrixMutate(ann.layers[j].m_biases,
-                    $m.multMatrixScalarMutate(deltaB[j], _ann.conf.rate));
+                    $m.multMatrixScalarMutate(deltaB[j], feedForwardAnn.conf.rate));
             }
         }
 
@@ -208,18 +208,18 @@
         return o;
     }
 
-    _ann.init = init;
-    _ann.train = train;
-    _ann.predict = predict;
-    _ann.sigmoid = sigmoid;
-    _ann.sigmoidPrime = sigmoidPrime;
-    _ann.gaussian = gaussian;
-    _ann.gaussianPrime = gaussianPrime;
-    _ann.tanh = tanh;
-    _ann.tanhPrime = tanhPrime;
-    _ann.shuffle = shuffle;
+    feedForwardAnn.init = init;
+    feedForwardAnn.train = train;
+    feedForwardAnn.predict = predict;
+    feedForwardAnn.sigmoid = sigmoid;
+    feedForwardAnn.sigmoidPrime = sigmoidPrime;
+    feedForwardAnn.gaussian = gaussian;
+    feedForwardAnn.gaussianPrime = gaussianPrime;
+    feedForwardAnn.tanh = tanh;
+    feedForwardAnn.tanhPrime = tanhPrime;
+    feedForwardAnn.shuffle = shuffle;
 
-    module.exports = _ann;
+    module.exports = feedForwardAnn;
 
 }.call(this));
 

@@ -2,7 +2,7 @@
     var $m = require('./math');
     var $errors = require('./lib/errors');
 
-    var _nba = {};
+    var naiveBayes = {};
 
     var SQUARE_ROOT_2PI = Math.sqrt(2 * Math.PI);
     var EPSILON = 0.02;
@@ -79,13 +79,13 @@
 
     }
 
-    _nba.predict = predict;
-    _nba.train = train;
-    _nba.calcProbability = calcProbability;
-    _nba.summarize = summarize;
-    _nba.init = init;
+    naiveBayes.predict = predict;
+    naiveBayes.train = train;
+    naiveBayes.calcProbability = calcProbability;
+    naiveBayes.summarize = summarize;
+    naiveBayes.init = init;
 
-    module.exports = _nba;
+    module.exports = naiveBayes;
 
 }.call(this));
 
