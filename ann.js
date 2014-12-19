@@ -1,6 +1,6 @@
 (function () {
 
-    var $m = require('./math');
+    var $m = require('./common/math');
 
     var MIN_NUM_LAYERS = 3;
     var ERRORS = {

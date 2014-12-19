@@ -1,6 +1,6 @@
 (function () {
-    var $m = require('./math');
-    var $errors = require('./lib/errors');
+    var $m = require('./common/math');
+    var $errors = require('./common/errors');
 
     var naiveBayes = {};
 

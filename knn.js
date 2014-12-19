@@ -1,7 +1,7 @@
 (function () {
 
     var _ = require('./lib/lodash');
-    var $m = require('./math');
+    var $m = require('./common/math');
 
     var kNearestNeighbours = {};
 
