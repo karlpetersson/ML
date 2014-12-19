@@ -5,8 +5,6 @@
 
     var _knn = {};
 
-    var DIM_MISMATCH = 'Dimension mismatch between points';
-
     function Node(value, label, leftChild, rightChild) {
         this.value = value;
         this.label = label;
@@ -63,7 +61,7 @@
 
     function classify (root, point, k) {
         var bestGuesses = [],
-            labels = [Infinity];
+            labels = [];
 
         // Nearest neighbours search
         (function next (node, depth) {
