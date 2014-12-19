@@ -1,5 +1,5 @@
 var ann = require('../ann');
-var data = require('../data');
+var data = require('../common/data');
 
 var testann = ann.init([2,2,1], [[ann.tanh, ann.tanhPrime]]);
 

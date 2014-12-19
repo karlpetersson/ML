@@ -1,5 +1,5 @@
 var nba = require('../nba');
-var data = require('../data');
+var data = require('../common/data');
 var _ = require('../lib/lodash');
 
 var hej = nba.init();

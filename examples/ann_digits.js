@@ -1,5 +1,5 @@
 var sink = require('../ann');
-var data = require('../data');
+var data = require('../common/data');
 var _ = require('../lib/lodash');
 
 var hej = sink.init([64,64,10], [[sink.sigmoid, sink.sigmoidPrime], [sink.sigmoid, sink.sigmoidPrime]]);

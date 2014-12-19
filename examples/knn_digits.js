@@ -1,5 +1,5 @@
 var knn = require('../knn');
-var data = require('../data');
+var data = require('../common/data');
 var _ = require('../lib/lodash');
 
 var trainingData;
