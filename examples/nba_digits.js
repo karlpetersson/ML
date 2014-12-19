@@ -20,8 +20,6 @@ data.readCsv('optdigits.tra', function (result) {
 		trainingDataByClass[_.last(line)].push(xvalues);
 	});
 
-	//console.log(trainingDataByClass);
-
 	data.readCsv('optdigits.tes', function (res) {
 		
 		testData = _.map(res, function(line) {

@@ -61,3 +61,5 @@ console.log(m.mean([1,2,3,4]));
 console.log("--------");
 console.log("variance of [1,2,3,4]");
 console.log(m.std([1,1,1]));
+console.log("euclidian distance [3,3,3] [6,6,6]");
+console.log(m.euclidianDistance([3,3,3], [6,6,6]));

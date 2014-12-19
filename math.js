@@ -2,6 +2,15 @@
 
 	var m = {};
 
+	var ERRORS = {
+		DIM_MISMATCH: 'Dimension mismatch',
+		ZERO_LENGTH: 'Empty vector'
+	};
+
+	/*********************
+	 * Matrix operations *
+	 *********************/
+
 	m.multMatrixElementwise = function (m1, m2) {
 		var res = [],
 			rows = m1.length,
@@ -146,17 +155,6 @@
 		return res;
 	};
 
-	m.vectorize = function (fn) {
-		return function (vec) {
-			var len = vec.length;
-			var res = [];
-			for(var r = 0; r < len; r++) {
-				res[r] = [fn(vec[r][0])];
-			}
-			return res;
-		};
-	};
-
 	m.multMatrixElementwiseMutate = function (m1, m2) {
 		var rows = m1.length,
 			cols = m1[0].length;
@@ -206,6 +204,10 @@
 		return m1;
 	};
 
+	/*********************
+	 * Statistics		 *
+	 *********************/
+
 	m.sum = function (vec) {
 		var sum = 0,
 			len = vec.length;
@@ -216,6 +218,7 @@
 	};
 
 	m.mean = function (vec) {
+		if(vec.length < 1) throw new Errors(ERRORS.ZERO_LENGTH);
 		return m.sum(vec)/vec.length;
 	};
 
@@ -223,6 +226,8 @@
 		var average = m.mean(vec),
 			len = vec.length,
 			squared = 0;
+
+		if(len < 1) throw new Errors(ERRORS.ZERO_LENGTH);
 
 		for(var i = 0; i < len; i++) {
 			squared += Math.pow(vec[i] - average, 2);
@@ -233,6 +238,32 @@
 
 	m.std = function (vec) {
 		return Math.sqrt(m.variance(vec));
+	};
+
+	/*********************
+	 * Other             *
+	 *********************/
+
+	m.vectorize = function (fn) {
+		return function (vec) {
+			var len = vec.length;
+			var res = [];
+			for(var r = 0; r < len; r++) {
+				res[r] = [fn(vec[r][0])];
+			}
+			return res;
+		};
+	};
+
+	m.euclidianDistance = function (p1, p2) {
+		if(p1.length !== p2.length) throw new Error(ERRORS.DIM_MISMATCH);
+
+		var sum = 0;
+		for(var i = 0, len = p1.length; i < len; i++) {
+			sum += Math.pow(p2[i] - p1[i], 2);
+		}
+
+		return Math.sqrt(sum);
 	};
 
 	module.exports = m;
