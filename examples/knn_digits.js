@@ -2,40 +2,38 @@ var knn = require('../knn');
 var data = require('../common/data');
 var _ = require('../lib/lodash');
 
-var trainingData;
-var testData;
-var trainingLabels = [];
 var testLabels = [];
 
-data.readCsv('optdigits.tra', function (result) {
-
-    trainingData = _.map(result, function(line) {
-        return {x: _.initial(line), y: _.last(line)};
-    });
-
-    data.readCsv('optdigits.tes', function (res) {
-        
-        testData = _.map(res, function(line) {
-            testLabels.push(_.last(line));
-            return _.initial(line);
-        });
-
-        var hej = knn.init(trainingData);
-
-        var totguesses = 0;
-        var totcorrect = 0;
-
-        for(var i = 0; i < testData.length; i++) {
-            var guess = knn.classify(hej, testData[i], 1);
-
-            console.log("Example: " + i + ", guess: " + guess);
-
-            totguesses++;
-
-            if(guess == testLabels[i]) {
-                totcorrect++;
-            }
-        }
-        console.log(((totcorrect/totguesses) * 100).toFixed(2) + "% (" + totcorrect + "/" + totguesses + ") correct guesses");
-    });
+var trainingData = data.readCsv('optdigits.tra');
+var trainingExamples = trainingData.map(function (line) {
+    return {
+        x: _.initial(line).map(function (v) { return parseInt(v, 10);}),
+        y: parseInt(_.last(line))
+    }
 });
+
+var testData = data.readCsv('optdigits.tes');
+var testExamples = testData.map(function (line) {
+    testLabels.push(parseInt(_.last(line)));
+    return _.initial(line).map(function (v) { return parseInt(v, 10);});
+});
+
+console.log(_.last(testLabels));
+
+var hej = knn.init(trainingExamples);
+
+var totguesses = 0;
+var totcorrect = 0;
+
+for(var i = 0; i < testExamples.length; i++) {
+    var guess = knn.classify(hej, testExamples[i], 1);
+
+    console.log("Example: " + i + ", guess: " + guess);
+
+    totguesses++;
+    if(guess == testLabels[i]) {
+        totcorrect++;
+    }
+}
+
+console.log(((totcorrect/totguesses) * 100).toFixed(2) + "% (" + totcorrect + "/" + totguesses + ") correct guesses");

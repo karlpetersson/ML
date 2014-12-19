@@ -4,55 +4,52 @@ var _ = require('../lib/lodash');
 
 var hej = nba.init();
 
-var trainingData;
-var testData;
-
-data.readCsv('optdigits.tra', function (result) {
-    var trainingDataByClass = [];
-
-    trainingData = _.map(result, function(line) {
-        if(!trainingDataByClass[_.last(line)]) {
-            trainingDataByClass[_.last(line)] = [];
-        }
-        xvalues = _.map(_.initial(line), function (d) {
-            return d/50;
-        });
-        trainingDataByClass[_.last(line)].push(xvalues);
+var trainingData = data.readCsv('optdigits.tra');
+var trainingDataByClass = [];
+var trainingExamples = trainingData.map(function (line) {
+    var y = parseInt(_.last(line));
+    var x = _.initial(line).map(function (v) { 
+        return parseInt(v, 10)/50;
     });
 
-    data.readCsv('optdigits.tes', function (res) {
-        
-        testData = _.map(res, function(line) {
-            xvalues = _.map(_.initial(line), function (d) {
-                return d/50;
-            });
-            return {x: xvalues, y: _.last(line)};
-        });
+    if(!trainingDataByClass[y]) {
+        trainingDataByClass[y] = [];
+    }
 
-        nba.train(hej, trainingDataByClass);
-
-        var totguesses = 0;
-        var totcorrect = 0;
-
-        for(var i = 0; i < testData.length; i++) {
-            var guess = nba.predict(hej, testData[i].x);
-            totguesses++;
-
-            var idx = 0;
-            var num = -1.0;
-
-            for(var lol = 0; lol < guess.length; lol++) {
-                if(parseFloat(guess[lol]) > parseFloat(num)) {
-                    num = guess[lol];
-                    idx = lol;
-                }
-            }
-
-            if(idx == testData[i].y) {
-                totcorrect++;
-            }
-
-        }
-        console.log(((totcorrect/totguesses) * 100).toFixed(2) + "% (" + totcorrect + "/" + totguesses + ") correct guesses");
-    });
+    trainingDataByClass[y].push(x);
 });
+
+var testData = data.readCsv('optdigits.tes');
+testExamples = testData.map(function (line) {
+    var y = parseInt(_.last(line));
+    var x = _.initial(line).map(function (v) { 
+        return parseInt(v, 10)/50;
+    });
+    return {x: x, y: y};
+});
+
+nba.train(hej, trainingDataByClass);
+
+var totguesses = 0;
+var totcorrect = 0;
+
+for(var i = 0; i < testExamples.length; i++) {
+    var guess = nba.predict(hej, testExamples[i].x);
+    totguesses++;
+
+    var idx = 0;
+    var num = -1.0;
+
+    for(var lol = 0; lol < guess.length; lol++) {
+        if(parseFloat(guess[lol]) > parseFloat(num)) {
+            num = guess[lol];
+            idx = lol;
+        }
+    }
+
+    if(idx == testExamples[i].y) {
+        totcorrect++;
+    }
+
+}
+console.log(((totcorrect/totguesses) * 100).toFixed(2) + "% (" + totcorrect + "/" + totguesses + ") correct guesses");

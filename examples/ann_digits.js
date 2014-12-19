@@ -7,58 +7,55 @@ var hej = sink.init([64,64,10], [[sink.sigmoid, sink.sigmoidPrime], [sink.sigmoi
 sink.conf.rate = 0.1;
 sink.conf.logging = 1;
 
-var trainingData;
-var testData;
-
-data.readCsv('optdigits.tra', function (result) {
-    trainingData = _.map(result, function(line) {
-        xvalues = _.map(_.initial(line), function (d) {
-            return d/50;
-        });
-        var y = [0,0,0,0,0,0,0,0,0,0];
-        y[_.last(line)] = 1;
-        return {x: xvalues, y: y};
+var trainingData = data.readCsv('optdigits.tra');
+var trainingExamples = trainingData.map(function (line) {
+    var y = [0,0,0,0,0,0,0,0,0,0];
+    var x = _.initial(line).map(function (v) {
+        return parseInt(v)/50;
     });
-
-    data.readCsv('optdigits.tes', function (res) {
-        testData = _.map(res, function(line) {
-            xvalues = _.map(_.initial(line), function (d) {
-                return d/50;
-            });
-            return {x: xvalues, y: _.last(line)};
-        }); 
-
-        for(var i = 0; i < 5; i++) {
-            var now = Date.now();
-            sink.shuffle(trainingData);
-            sink.train(hej, trainingData);
-            var then = Date.now();
-            console.log('Epoch completed');
-            console.log("time spent: " + (then - now));
-        }
-
-        var numtest = testData.length;
-        var totguesses = 0;
-        var totcorrect = 0;
-        for(var i = 0; i < numtest; i++) {
-            totguesses++;
-
-            var guess = sink.predict(hej, testData[i].x);
-
-            var idx = 0;
-            var num = -1.0;
-
-            for(var lol = 0; lol < guess.length; lol++) {
-                if(parseFloat(guess[lol]) > parseFloat(num)) {
-                    num = guess[lol];
-                    idx = lol;
-                }
-            }
-
-            if(idx == testData[i].y) {
-                totcorrect++;
-            }
-        }
-        console.log(((totcorrect/totguesses) * 100).toFixed(2) + "% (" + totcorrect + "/" + totguesses + ") correct guesses");
-    });
+    y[parseInt(_.last(line))] = 1;
+    return {x: x, y: y};
 });
+
+var testData = data.readCsv('optdigits.tes');
+var testExamples = testData.map(function (line) {
+    var y = parseInt(_.last(line));
+    var x = _.initial(line).map(function (v) {
+        return parseInt(v)/50;
+    });
+    return {x: x, y: y};
+});
+
+for(var i = 0; i < 5; i++) {
+    var now = Date.now();
+    sink.shuffle(trainingExamples);
+    sink.train(hej, trainingExamples);
+    var then = Date.now();
+    console.log('Epoch completed');
+    console.log("time spent: " + (then - now));
+}
+
+var numtest = testExamples.length;
+var totguesses = 0;
+var totcorrect = 0;
+for(var i = 0; i < numtest; i++) {
+    totguesses++;
+
+    var guess = sink.predict(hej, testExamples[i].x);
+
+    var idx = 0;
+    var num = -1.0;
+
+    for(var lol = 0; lol < guess.length; lol++) {
+        if(parseFloat(guess[lol]) > parseFloat(num)) {
+            num = guess[lol];
+            idx = lol;
+        }
+    }
+
+    if(idx == testExamples[i].y) {
+        totcorrect++;
+    }
+}
+
+console.log(((totcorrect/totguesses) * 100).toFixed(2) + "% (" + totcorrect + "/" + totguesses + ") correct guesses");
