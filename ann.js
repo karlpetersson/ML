@@ -5,7 +5,7 @@
     var MIN_NUM_LAYERS = 3;
     var ERRORS = {
         LAYER_AFN_MISMATCH: 'Needs one tuple [fn, fnPrime] for each layer except the input layer, or just one tuple for all layers',
-        TOO_FEW_LAYERS: 'The network at least one input, one hidden and one output layer'
+        TOO_FEW_LAYERS: 'Ann needs at least one input, one hidden and one output layer'
     };
 
     var feedForwardAnn = {
@@ -35,8 +35,8 @@
     }
 
     function Layer (numNeurons, numInputsPerNeuron, activationFn, activationFnPrime) {
-        this.m_weights = $m.random(numNeurons, numInputsPerNeuron);
-        this.m_biases = $m.random(numNeurons, 1);
+        this.mWeights = $m.random(numNeurons, numInputsPerNeuron);
+        this.mBiases = $m.random(numNeurons, 1);
         
         this.activations = [];
         this.aPrimes = [];
@@ -112,7 +112,7 @@
             for(var l = numLayers - 2; l >= 0; l--) {
                 var _activation = l > 0 ? ann.layers[l - 1].activations : inputs;
                 
-                delta = $m.multMatrixElementwiseMutate($m.multMatrixMatrix($m.transpose(ann.layers[l+1].m_weights), delta),
+                delta = $m.multMatrixElementwiseMutate($m.multMatrixMatrix($m.transpose(ann.layers[l+1].mWeights), delta),
                     ann.layers[l].aPrimes);
 
                 deltaW[l] = $m.multMatrixMatrix(delta, $m.transpose(_activation));
@@ -121,9 +121,9 @@
                 
             // update weights by gradient descent
             for(var j = 0; j < ann.layers.length; j++) {
-                ann.layers[j].m_weights = $m.subtractMatrixMatrixMutate(ann.layers[j].m_weights,
+                ann.layers[j].mWeights = $m.subtractMatrixMatrixMutate(ann.layers[j].mWeights,
                     $m.multMatrixScalarMutate(deltaW[j], feedForwardAnn.conf.rate));
-                ann.layers[j].m_biases = $m.subtractMatrixMatrixMutate(ann.layers[j].m_biases,
+                ann.layers[j].mBiases = $m.subtractMatrixMatrixMutate(ann.layers[j].mBiases,
                     $m.multMatrixScalarMutate(deltaB[j], feedForwardAnn.conf.rate));
             }
         }
@@ -153,7 +153,7 @@
 
         for (var i = 0; i < ann.layers.length; i++) {
             // calculate weighed input of neurons to this layer
-            var z = $m.addMatrixMatrixMutate($m.multMatrixMatrix(ann.layers[i].m_weights, inputs), ann.layers[i].m_biases);
+            var z = $m.addMatrixMatrixMutate($m.multMatrixMatrix(ann.layers[i].mWeights, inputs), ann.layers[i].mBiases);
 
             var activation = ann.layers[i].activationFn(z);
             
