@@ -1,6 +1,5 @@
 (function () {
 
-    var _ = require('./lib/lodash');
     var $m = require('./common/math');
 
     var kNearestNeighbours = {};
@@ -41,8 +40,13 @@
         var k = points[0].x.length;
         var axis = depth % k;
 
-        points = _.sortBy(points, function (p) {
-            return p.x[axis];
+        points = points.sort(function (a,b) {
+            if(a.x[axis] < b.x[axis]) {
+                return -1;
+            } else if(a.x[axis] > b.x[axis]) {
+                return 1;
+            }
+            return 0;
         });
 
         var m = Math.floor(points.length / 2);
