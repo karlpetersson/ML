@@ -41,12 +41,7 @@
         var axis = depth % k;
 
         points = points.sort(function (a,b) {
-            if(a.x[axis] < b.x[axis]) {
-                return -1;
-            } else if(a.x[axis] > b.x[axis]) {
-                return 1;
-            }
-            return 0;
+            return a.x[axis] - b.x[axis];
         });
 
         var m = Math.floor(points.length / 2);
