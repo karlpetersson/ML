@@ -28,7 +28,7 @@ var totcorrect = 0;
 for(var i = 0; i < testExamples.length; i++) {
     var guess = knn.classify(hej, testExamples[i], 1);
 
-    console.log("Example: " + i + ", guess: " + guess);
+    //console.log("Example: " + i + ", guess: " + guess);
 
     totguesses++;
     if(guess == testLabels[i]) {

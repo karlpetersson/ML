@@ -78,6 +78,7 @@
             }
 
             var idx = getMaxIdx(bestGuesses, k);
+
             var dist = $m.euclidianDistance(node.value, point);
 
             if (dist < bestGuesses[idx]) {
